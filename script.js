@@ -1,8 +1,9 @@
 // ============================================================
-// ⚙️ KONFIGURASI — GANTI DENGAN URL ANDA
+// ⚙️ KONFIGURASI — URL BARU ANDA
 // ============================================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbzvrvo0G-478j8lwGldb8RN6ZFKJuPGnL5NVtBypgjJDgDR3JgClelp09iTGOCa-IzW/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzOv8ERJ4kc3BSd9_4AVK6AHPmFW6BWhlaKNSa-sAtBrD6fwt5GfJZaNtW9Fl0Yw868/exec';
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1bKZdEl3egxhoBC0YmVOPEWSKjb0yiubPEprMdkU_ib4/edit';
+
 // ============================================================
 // STATE
 // ============================================================
@@ -74,7 +75,7 @@ async function loadStudents() {
 }
 
 // ============================================================
-// RENDER TABEL
+// RENDER TABEL (TERMASUK MATA KULIAH)
 // ============================================================
 function renderStudents() {
   const total = students.length;
@@ -82,7 +83,7 @@ function renderStudents() {
   studentCount.textContent = `${hadir}/${total} hadir`;
 
   if (total === 0) {
-    studentTableBody.innerHTML = `<tr><td colspan="6" class="empty-state">Belum ada data mahasiswa</td></tr>`;
+    studentTableBody.innerHTML = `<tr><td colspan="7" class="empty-state">Belum ada data mahasiswa</td></tr>`;
     return;
   }
 
@@ -94,6 +95,7 @@ function renderStudents() {
       <td>${escapeHtml(s.Jurusan)}</td>
       <td><span class="status-badge ${s.Status === 'Hadir' ? 'status-hadir' : 'status-menunggu'}">${escapeHtml(s.Status || 'Menunggu')}</span></td>
       <td>${escapeHtml(s['Waktu Hadir'] || '-')}</td>
+      <td>${escapeHtml(s['Mata Kuliah'] || '-')}</td>
     </tr>
   `).join('');
 }
