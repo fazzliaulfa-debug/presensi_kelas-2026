@@ -1,7 +1,7 @@
 // ============================================================
-// ⚙️ KONFIGURASI — URL BARU ANDA
+// ⚙️ KONFIGURASI — URL APPS SCRIPT TERBARU
 // ============================================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbzOv8ERJ4kc3BSd9_4AVK6AHPmFW6BWhlaKNSa-sAtBrD6fwt5GfJZaNtW9Fl0Yw868/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwBeM_REPIXyfwq3GIh6aRnFlxuhFx5CmtU3tIJRvDvbi-PCiCzmDGsFudi97ZldCGP/exec';
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1bKZdEl3egxhoBC0YmVOPEWSKjb0yiubPEprMdkU_ib4/edit';
 
 // ============================================================
@@ -87,17 +87,22 @@ function renderStudents() {
     return;
   }
 
-  studentTableBody.innerHTML = students.map(s => `
-    <tr>
-      <td>${escapeHtml(s.NIM)}</td>
-      <td>${escapeHtml(s.Nama)}</td>
-      <td>${escapeHtml(s.Kelas)}</td>
-      <td>${escapeHtml(s.Jurusan)}</td>
-      <td><span class="status-badge ${s.Status === 'Hadir' ? 'status-hadir' : 'status-menunggu'}">${escapeHtml(s.Status || 'Menunggu')}</span></td>
-      <td>${escapeHtml(s['Waktu Hadir'] || '-')}</td>
-      <td>${escapeHtml(s['Mata Kuliah'] || '-')}</td>
-    </tr>
-  `).join('');
+  studentTableBody.innerHTML = students.map(s => {
+    // Mengecek berbagai variasi nama properti JSON dari Apps Script
+    const mataKuliah = s['Mata Kuliah'] || s.MataKuliah || s.matakuliah || s.mata_kuliah || '-';
+
+    return `
+      <tr>
+        <td>${escapeHtml(s.NIM)}</td>
+        <td>${escapeHtml(s.Nama)}</td>
+        <td>${escapeHtml(s.Kelas)}</td>
+        <td>${escapeHtml(s.Jurusan)}</td>
+        <td><span class="status-badge ${s.Status === 'Hadir' ? 'status-hadir' : 'status-menunggu'}">${escapeHtml(s.Status || 'Menunggu')}</span></td>
+        <td>${escapeHtml(s['Waktu Hadir'] || '-')}</td>
+        <td>${escapeHtml(mataKuliah)}</td>
+      </tr>
+    `;
+  }).join('');
 }
 
 function escapeHtml(str) {
