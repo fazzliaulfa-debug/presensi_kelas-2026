@@ -19,15 +19,24 @@
       <div id="qrDisplay" class="qr-placeholder">
         <span>QR Code akan muncul di sini</span>
       </div>
+
       <div class="btn-group">
         <button class="btn" id="refreshBtn">🔄 Refresh Data</button>
         <button class="btn" id="downloadQrBtn">⬇️ Download QR</button>
         <button class="btn" id="openSheetBtn">📊 Buka Sheet</button>
         <button class="btn btn-danger" id="resetBtn">🗑️ Reset Presensi</button>
       </div>
+
       <div class="input-row">
-        <input type="text" id="nimInput" placeholder="Ketik NIM untuk buat QR..." />
-        <button class="btn btn-primary" id="generateQrBtn">Generate QR</button>
+        <!-- Generate QR menggunakan NAMA -->
+        <input
+          type="text"
+          id="nimInput"
+          placeholder="Ketik Nama untuk buat QR..."
+        />
+        <button class="btn btn-primary" id="generateQrBtn">
+          Generate QR
+        </button>
       </div>
     </div>
 
@@ -35,18 +44,30 @@
     <div id="scannerContainer" class="scanner-container">
       <div id="qrReader"></div>
     </div>
-    <div class="scan-status" id="scanStatus">Mengecek koneksi...</div>
+
+    <div class="scan-status" id="scanStatus">
+      Mengecek koneksi...
+    </div>
+
     <div class="scan-buttons">
-      <button class="btn btn-primary" id="scanBtn">📷 Mulai Scan</button>
-      <button class="btn hidden" id="stopScanBtn">⏹️ Tutup Scanner</button>
+      <button class="btn btn-primary" id="scanBtn">
+        📷 Mulai Scan
+      </button>
+
+      <button class="btn hidden" id="stopScanBtn">
+        ⏹️ Tutup Scanner
+      </button>
     </div>
 
     <!-- Student List -->
     <div class="student-list">
       <div class="list-header">
         <h2>Daftar Mahasiswa</h2>
-        <span class="badge" id="studentCount">0 mahasiswa</span>
+        <span class="badge" id="studentCount">
+          0 mahasiswa
+        </span>
       </div>
+
       <div class="table-wrapper">
         <table>
           <thead>
@@ -57,11 +78,16 @@
               <th>Jurusan</th>
               <th>Status</th>
               <th>Waktu Hadir</th>
-              <th>Mata Kuliah</th> <!-- Kolom Baru -->
+              <th>Mata Kuliah</th>
             </tr>
           </thead>
+
           <tbody id="studentTableBody">
-            <tr><td colspan="7" class="empty-state">Memuat data...</td></tr>
+            <tr>
+              <td colspan="7" class="empty-state">
+                Memuat data...
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -70,9 +96,14 @@
     <!-- Connection Status -->
     <div class="connection-status">
       <span class="dot loading" id="connectionDot"></span>
-      <span id="connectionMsg">Menghubungkan ke Google Sheets...</span>
+      <span id="connectionMsg">
+        Menghubungkan ke Google Sheets...
+      </span>
     </div>
-    <div class="footer-note">© 2026 Presensi Digital</div>
+
+    <div class="footer-note">
+      © 2026 Presensi Digital
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
