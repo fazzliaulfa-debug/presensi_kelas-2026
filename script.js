@@ -91,6 +91,9 @@ function renderStudents() {
     // Mengecek berbagai variasi nama properti JSON dari Apps Script
     const mataKuliah = s['Mata Kuliah'] || s.MataKuliah || s.matakuliah || s.mata_kuliah || '-';
 
+    // Format Waktu Hadir menjadi tanggal + jam saja
+    const waktuHadir = formatWaktuHadir(s['Waktu Hadir']);
+
     return `
       <tr>
         <td>${escapeHtml(s.NIM)}</td>
@@ -98,11 +101,34 @@ function renderStudents() {
         <td>${escapeHtml(s.Kelas)}</td>
         <td>${escapeHtml(s.Jurusan)}</td>
         <td><span class="status-badge ${s.Status === 'Hadir' ? 'status-hadir' : 'status-menunggu'}">${escapeHtml(s.Status || 'Menunggu')}</span></td>
-        <td>${escapeHtml(s['Waktu Hadir'] || '-')}</td>
+        <td>${escapeHtml(waktuHadir)}</td>
         <td>${escapeHtml(mataKuliah)}</td>
       </tr>
     `;
   }).join('');
+}
+
+// ============================================================
+// FORMAT WAKTU HADIR
+// ============================================================
+function formatWaktuHadir(waktu) {
+  if (!waktu) return '-';
+
+  const date = new Date(waktu);
+
+  if (isNaN(date.getTime())) {
+    return String(waktu);
+  }
+
+  const tanggal = String(date.getDate()).padStart(2, '0');
+  const bulan = String(date.getMonth() + 1).padStart(2, '0');
+  const tahun = date.getFullYear();
+
+  const jam = String(date.getHours()).padStart(2, '0');
+  const menit = String(date.getMinutes()).padStart(2, '0');
+  const detik = String(date.getSeconds()).padStart(2, '0');
+
+  return `${tanggal}/${bulan}/${tahun} ${jam}:${menit}:${detik}`;
 }
 
 function escapeHtml(str) {
