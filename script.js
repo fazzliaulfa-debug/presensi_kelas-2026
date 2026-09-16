@@ -118,12 +118,29 @@ function escapeHtml(str) {
 // ============================================================
 // GENERATE QR CODE
 // ============================================================
-function generateQrCode(nim) {
-  const targetNim = (nim || nimInput.value || '').trim()
-    || (students[0] ? students[0].NIM : null);
+function generateQrCode(nama) {
+  const targetNama = (nama || nimInput.value || '').trim();
+
+  if (!targetNama) {
+    showToast('Ketik nama mahasiswa terlebih dahulu', 'error');
+    return;
+  }
+
+  // Cari mahasiswa berdasarkan Nama
+  const student = students.find(s =>
+    String(s.Nama || '').trim().toLowerCase() === targetNama.toLowerCase()
+  );
+
+  if (!student) {
+    showToast(`Nama "${targetNama}" tidak ditemukan`, 'error');
+    return;
+  }
+
+  // QR tetap berisi NIM agar sistem presensi yang lama tetap berjalan
+  const targetNim = String(student.NIM || '').trim();
 
   if (!targetNim) {
-    showToast('Tidak ada NIM untuk di-generate', 'error');
+    showToast('NIM mahasiswa tidak ditemukan', 'error');
     return;
   }
 
@@ -136,9 +153,10 @@ function generateQrCode(nim) {
       showToast('Gagal generate QR', 'error');
       return;
     }
-    qrDisplay.innerHTML = `<img src="${url}" alt="QR ${targetNim}">`;
+
+    qrDisplay.innerHTML = `<img src="${url}" alt="QR ${targetNama}">`;
     qrDisplay.dataset.currentNim = targetNim;
-    showToast(`QR untuk NIM ${targetNim} berhasil dibuat`, 'success');
+    showToast(`QR untuk ${student.Nama} berhasil dibuat`, 'success');
   });
 }
 
@@ -271,7 +289,7 @@ stopScanBtn.addEventListener('click', stopScan);
 // Klik area QR → regenerate QR mahasiswa pertama
 qrDisplay.addEventListener('click', () => generateQrCode());
 
-// Enter di input NIM → generate
+// Enter di input Nama → generate
 nimInput.addEventListener('keypress', e => {
   if (e.key === 'Enter') generateQrCode();
 });
@@ -281,6 +299,6 @@ nimInput.addEventListener('keypress', e => {
 // ============================================================
 loadStudents().then(() => {
   if (students.length > 0) {
-    generateQrCode(students[0].NIM);
+    generateQrCode(students[0].Nama);
   }
 });
