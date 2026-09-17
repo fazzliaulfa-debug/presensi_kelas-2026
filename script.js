@@ -1,3 +1,4 @@
+```javascript
 // ============================================================
 // ⚙️ KONFIGURASI — URL APPS SCRIPT TERBARU
 // ============================================================
@@ -17,22 +18,22 @@ let lastScanned = { nim: '', time: 0 };
 // ============================================================
 const $ = id => document.getElementById(id);
 
-const qrDisplay = $('qrDisplay');
-const refreshBtn = $('refreshBtn');
-const downloadQrBtn = $('downloadQrBtn');
-const openSheetBtn = $('openSheetBtn');
-const resetBtn = $('resetBtn');
-const generateQrBtn = $('generateQrBtn');
-const nimInput = $('nimInput');
-const scannerContainer = $('scannerContainer');
-const scanBtn = $('scanBtn');
-const stopScanBtn = $('stopScanBtn');
-const scanStatus = $('scanStatus');
-const studentCount = $('studentCount');
-const studentTableBody = $('studentTableBody');
-const connectionDot = $('connectionDot');
-const connectionMsg = $('connectionMsg');
-const toast = $('toast');
+let qrDisplay;
+let refreshBtn;
+let downloadQrBtn;
+let openSheetBtn;
+let resetBtn;
+let generateQrBtn;
+let nimInput;
+let scannerContainer;
+let scanBtn;
+let stopScanBtn;
+let scanStatus;
+let studentCount;
+let studentTableBody;
+let connectionDot;
+let connectionMsg;
+let toast;
 
 // ============================================================
 // TOAST
@@ -40,6 +41,8 @@ const toast = $('toast');
 let toastTimer = null;
 
 function showToast(msg, type = 'info') {
+  if (!toast) return;
+
   toast.textContent = msg;
   toast.className = 'toast show ' + type;
 
@@ -54,25 +57,39 @@ function showToast(msg, type = 'info') {
 // CONNECTION STATUS
 // ============================================================
 function setConnection(state, msg) {
-  connectionDot.className = 'dot ' + state;
-  connectionMsg.textContent = msg;
+  if (connectionDot) {
+    connectionDot.className = 'dot ' + state;
+  }
+
+  if (connectionMsg) {
+    connectionMsg.textContent = msg;
+  }
 }
 
 // ============================================================
 // FETCH DATA DARI GOOGLE SHEETS
 // ============================================================
 async function loadStudents() {
-  setConnection('loading', 'Memuat data dari Google Sheets...');
+  setConnection(
+    'loading',
+    'Memuat data dari Google Sheets...'
+  );
 
   try {
     const res = await fetch(
       `${API_URL}?action=getStudents&t=${Date.now()}`
     );
 
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
     const json = await res.json();
 
     if (json.status === 'success') {
-      students = json.data;
+      students = Array.isArray(json.data)
+        ? json.data
+        : [];
 
       renderStudents();
 
@@ -80,12 +97,15 @@ async function loadStudents() {
         '',
         `Terhubung • ${students.length} mahasiswa`
       );
+
     } else {
-      throw new Error(json.message);
+      throw new Error(
+        json.message || 'Data Google Sheets tidak berhasil dimuat'
+      );
     }
 
   } catch (err) {
-    console.error(err);
+    console.error('Gagal loadStudents:', err);
 
     setConnection(
       'offline',
@@ -106,7 +126,7 @@ function renderStudents() {
   const total = students.length;
 
   const hadir = students.filter(
-    s => s.Status === 'Hadir'
+    s => String(s.Status || '').trim() === 'Hadir'
   ).length;
 
   studentCount.textContent =
@@ -147,7 +167,7 @@ function renderStudents() {
 
         <td>
           <span class="status-badge ${
-            s.Status === 'Hadir'
+            String(s.Status || '').trim() === 'Hadir'
               ? 'status-hadir'
               : 'status-menunggu'
           }">
@@ -175,8 +195,6 @@ function formatWaktuHadir(waktu) {
 
   const teks = String(waktu).trim();
 
-  // Format:
-  // Wed Sep 16 2026 21:29:58 GMT+0700
   const cocok = teks.match(
     /(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/
   );
@@ -263,7 +281,6 @@ function generateQrCode(nama) {
     return;
   }
 
-  // Cari mahasiswa berdasarkan Nama
   const student = students.find(s =>
     String(s.Nama || '')
       .trim()
@@ -280,7 +297,6 @@ function generateQrCode(nama) {
     return;
   }
 
-  // Isi QR tetap NIM
   const targetNim =
     String(student.NIM || '').trim();
 
@@ -288,6 +304,18 @@ function generateQrCode(nama) {
 
     showToast(
       'NIM mahasiswa tidak ditemukan',
+      'error'
+    );
+
+    return;
+  }
+
+  if (
+    typeof QRCode === 'undefined' ||
+    typeof QRCode.toDataURL !== 'function'
+  ) {
+    showToast(
+      'Library QR Code belum termuat',
       'error'
     );
 
@@ -314,7 +342,7 @@ function generateQrCode(nama) {
       }
 
       qrDisplay.innerHTML =
-        `<img src="${url}" alt="QR ${targetNama}">`;
+        `<img src="${url}" alt="QR ${escapeHtml(targetNama)}">`;
 
       qrDisplay.dataset.currentNim =
         targetNim;
@@ -362,6 +390,16 @@ function downloadQr() {
 async function startScan() {
 
   if (isScanning) return;
+
+  if (typeof Html5Qrcode === 'undefined') {
+
+    showToast(
+      'Library scanner belum termuat',
+      'error'
+    );
+
+    return;
+  }
 
   scannerContainer.style.display =
     'block';
@@ -426,7 +464,6 @@ async function onScanSuccess(decodedText) {
   const now =
     Date.now();
 
-  // Cegah scan berulang dalam 3 detik
   if (
     lastScanned.nim === nim &&
     now - lastScanned.time < 3000
@@ -460,6 +497,10 @@ async function sendPresensi(nim) {
     const res = await fetch(
       `${API_URL}?action=presensi&nim=${encodeURIComponent(nim)}&t=${Date.now()}`
     );
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
 
     const json =
       await res.json();
@@ -524,7 +565,6 @@ async function stopScan() {
     try {
 
       await html5QrCode.stop();
-
       html5QrCode.clear();
 
     } catch (e) {
@@ -568,6 +608,10 @@ async function resetPresensi() {
       `${API_URL}?action=reset&t=${Date.now()}`
     );
 
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
     const json =
       await res.json();
 
@@ -583,11 +627,13 @@ async function resetPresensi() {
     } else {
 
       throw new Error(
-        json.message
+        json.message || 'Reset gagal'
       );
     }
 
   } catch (err) {
+
+    console.error(err);
 
     showToast(
       'Gagal reset: ' +
@@ -603,75 +649,133 @@ async function resetPresensi() {
 }
 
 // ============================================================
-// EVENT LISTENERS
-// ============================================================
-refreshBtn.addEventListener(
-  'click',
-  loadStudents
-);
-
-downloadQrBtn.addEventListener(
-  'click',
-  downloadQr
-);
-
-openSheetBtn.addEventListener(
-  'click',
-  () => window.open(
-    SHEET_URL,
-    '_blank'
-  )
-);
-
-resetBtn.addEventListener(
-  'click',
-  resetPresensi
-);
-
-generateQrBtn.addEventListener(
-  'click',
-  () => generateQrCode()
-);
-
-scanBtn.addEventListener(
-  'click',
-  startScan
-);
-
-stopScanBtn.addEventListener(
-  'click',
-  stopScan
-);
-
-// Klik area QR
-qrDisplay.addEventListener(
-  'click',
-  () => generateQrCode()
-);
-
-// Enter di input Nama
-nimInput.addEventListener(
-  'keypress',
-  e => {
-
-    if (e.key === 'Enter') {
-      generateQrCode();
-    }
-
-  }
-);
-
-// ============================================================
 // INIT
 // ============================================================
-loadStudents().then(() => {
+function init() {
 
-  if (students.length > 0) {
+  // Ambil semua elemen setelah HTML selesai dimuat
+  qrDisplay = $('qrDisplay');
+  refreshBtn = $('refreshBtn');
+  downloadQrBtn = $('downloadQrBtn');
+  openSheetBtn = $('openSheetBtn');
+  resetBtn = $('resetBtn');
+  generateQrBtn = $('generateQrBtn');
+  nimInput = $('nimInput');
+  scannerContainer = $('scannerContainer');
+  scanBtn = $('scanBtn');
+  stopScanBtn = $('stopScanBtn');
+  scanStatus = $('scanStatus');
+  studentCount = $('studentCount');
+  studentTableBody = $('studentTableBody');
+  connectionDot = $('connectionDot');
+  connectionMsg = $('connectionMsg');
+  toast = $('toast');
 
-    generateQrCode(
-      students[0].Nama
-    );
-
+  // Pastikan semua elemen ditemukan
+  if (
+    !qrDisplay ||
+    !refreshBtn ||
+    !downloadQrBtn ||
+    !openSheetBtn ||
+    !resetBtn ||
+    !generateQrBtn ||
+    !nimInput ||
+    !scannerContainer ||
+    !scanBtn ||
+    !stopScanBtn ||
+    !scanStatus ||
+    !studentCount ||
+    !studentTableBody ||
+    !connectionDot ||
+    !connectionMsg ||
+    !toast
+  ) {
+    console.error('Ada elemen HTML yang tidak ditemukan.');
+    return;
   }
 
-});
+  // ==========================================================
+  // EVENT LISTENERS
+  // ==========================================================
+
+  refreshBtn.addEventListener(
+    'click',
+    loadStudents
+  );
+
+  downloadQrBtn.addEventListener(
+    'click',
+    downloadQr
+  );
+
+  openSheetBtn.addEventListener(
+    'click',
+    () => window.open(
+      SHEET_URL,
+      '_blank'
+    )
+  );
+
+  resetBtn.addEventListener(
+    'click',
+    resetPresensi
+  );
+
+  generateQrBtn.addEventListener(
+    'click',
+    () => generateQrCode()
+  );
+
+  scanBtn.addEventListener(
+    'click',
+    startScan
+  );
+
+  stopScanBtn.addEventListener(
+    'click',
+    stopScan
+  );
+
+  qrDisplay.addEventListener(
+    'click',
+    () => generateQrCode()
+  );
+
+  nimInput.addEventListener(
+    'keypress',
+    e => {
+      if (e.key === 'Enter') {
+        generateQrCode();
+      }
+    }
+  );
+
+  // ==========================================================
+  // LOAD DATA
+  // ==========================================================
+
+  loadStudents().then(() => {
+
+    if (students.length > 0) {
+
+      generateQrCode(
+        students[0].Nama
+      );
+
+    }
+
+  });
+}
+
+// ============================================================
+// JALANKAN SETELAH HTML SELESAI DIMUAT
+// ============================================================
+if (document.readyState === 'loading') {
+  document.addEventListener(
+    'DOMContentLoaded',
+    init
+  );
+} else {
+  init();
+}
+```
